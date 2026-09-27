@@ -121,7 +121,7 @@
             </div>
 
             <div class="text-slate-400 text-[11px] italic">
-                *2026/7/29（開設日）以降のサイクルを自動表示
+                *2026/7/29（開設日）以降のサイクルを自動表示（タップで詳細表示）
             </div>
         </div>
 
@@ -131,10 +131,30 @@
         </div>
     </main>
 
+    <!-- タップ詳細モーダル -->
+    <div id="eventModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modalDateTitle" class="text-lg font-bold text-slate-900">日付</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="modalContentBody" class="space-y-2.5 max-h-[60vh] overflow-y-auto custom-scrollbar text-sm">
+                <!-- 詳細内容 -->
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-all">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
-            &copy; おはるん(445358)＠34鯖 ver1.0 20260927
+            &copy; おはるん(445358)＠34鯖 ver1.1 20260927
         </div>
     </footer>
 
@@ -142,14 +162,9 @@
         /* -------------------------------------------------------------
            データ構造 & 定数定義
         ------------------------------------------------------------- */
-        // 最低参照限界: 2026年7月 (開設月)
         const MIN_YEAR = 2026;
         const MIN_MONTH = 6; // 0-indexed (6 = 7月)
 
-        /**
-         * 不定期イベント・メンテナンスの直書き用データ
-         * 予定を追加・更新する場合は、この配列に要素を追加してください。
-         */
         const customEvents = [
             {
                 type: 'event',
@@ -158,7 +173,6 @@
                 endDate: '2026-07-29',
                 note: 'サーバー開設記念'
             },
-            // 第13期：3次職
             {
                 type: 'event',
                 title: '3次職',
@@ -166,7 +180,6 @@
                 endDate: '2026-10-14',
                 note: '第13期開始日'
             },
-            // 第22期：4次職
             {
                 type: 'event',
                 title: '4次職',
@@ -174,7 +187,6 @@
                 endDate: '2026-12-16',
                 note: '第22期開始日'
             },
-            // 第31期：5次職
             {
                 type: 'event',
                 title: '5次職',
@@ -182,7 +194,6 @@
                 endDate: '2027-02-17',
                 note: '第31期開始日'
             },
-            // 第42期：6次職
             {
                 type: 'event',
                 title: '6次職',
@@ -192,9 +203,7 @@
             }
         ];
 
-        // 日本の祝日データ（2026年7月〜2027年12月）
         const HOLIDAYS = {
-            // --- 2026年 ---
             '2026-07-20': '海の日',
             '2026-08-11': '山の日',
             '2026-09-21': '敬老の日',
@@ -203,8 +212,6 @@
             '2026-10-12': 'スポーツの日',
             '2026-11-03': '文化の日',
             '2026-11-23': '勤労感謝の日',
-
-            // --- 2027年 ---
             '2027-01-01': '元日',
             '2027-01-11': '成人の日',
             '2027-02-11': '建国記念の日',
@@ -224,11 +231,9 @@
             '2027-11-23': '勤労感謝の日'
         };
 
-        // 今日の日付文字列を取得 (YYYY-MM-DD形式)
         const todayObj = new Date();
         const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
 
-        // 今日の日付からベース年月を取得
         let baseYear = todayObj.getFullYear();
         let baseMonth = todayObj.getMonth();
 
@@ -239,9 +244,6 @@
 
         let monthsData = [];
 
-        /* -------------------------------------------------------------
-           表示月データの自動計算 (指定月を含めた6ヶ月分)
-        ------------------------------------------------------------- */
         function initMonthsData() {
             monthsData = [];
             for (let i = 0; i < 6; i++) {
@@ -254,9 +256,6 @@
             }
         }
 
-        /* -------------------------------------------------------------
-           紙飛行機 & ウィッシュ 自動計算ロジック
-        ------------------------------------------------------------- */
         function getPaperPlaneInfo(dateStr) {
             const target = new Date(dateStr + 'T00:00:00');
             const basePaperPlaneDate = new Date('2026-07-15T00:00:00');
@@ -310,9 +309,6 @@
             return { active: false, isStart: false, isEnd: false };
         }
 
-        /* -------------------------------------------------------------
-           画面初期化 & レンダリング
-        ------------------------------------------------------------- */
         window.addEventListener('DOMContentLoaded', () => {
             initMonthsData();
             renderHeaderSubtitle();
@@ -353,9 +349,6 @@
             });
         }
 
-        /* -------------------------------------------------------------
-           カレンダーDOM作成
-        ------------------------------------------------------------- */
         function createMonthCalendarNode(year, monthIndex, monthName) {
             const card = document.createElement('div');
             card.className = "bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden transition-all hover:shadow-md";
@@ -401,7 +394,7 @@
 
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "bg-slate-50/50 min-h-[95px] sm:min-h-[115px] p-1.5";
+                emptyCell.className = "bg-slate-50/50 min-h-[105px] sm:min-h-[120px] p-1.5";
                 grid.appendChild(emptyCell);
             }
 
@@ -413,14 +406,18 @@
 
                 const paperInfo = getPaperPlaneInfo(dateStr);
                 const wishInfo = paperInfo.isBeforeOpen ? { active: false } : getWishInfo(dateStr);
+                const holidayName = HOLIDAYS[dateStr];
+                const matchingCustomEvents = getCustomEventsForDate(dateStr);
 
-                // 今日の場合は特別なボーダーやリングを追加
                 const todayClass = isToday ? "ring-2 ring-indigo-500 ring-inset z-10 font-bold" : "";
 
                 const cell = document.createElement('div');
-                cell.className = `min-h-[95px] sm:min-h-[115px] p-1.5 sm:p-2 flex flex-col group transition-colors relative ${paperInfo.colorClass} ${todayClass}`;
+                // スマホでも高さを十分に確保し、タップしやすく改善
+                cell.className = `min-h-[105px] sm:min-h-[120px] p-1 sm:p-2 flex flex-col group transition-colors relative cursor-pointer hover:bg-slate-100/50 ${paperInfo.colorClass} ${todayClass}`;
+                
+                // セル全体をタップしたときに詳細モーダルを開く
+                cell.onclick = () => openDayModal(dateStr, holidayName, paperInfo, wishInfo, matchingCustomEvents);
 
-                const holidayName = HOLIDAYS[dateStr];
                 let numColorClass = paperInfo.isBeforeOpen ? "text-slate-400 font-semibold" : "text-slate-700 font-semibold";
                 if (dayOfWeek === 0 || holidayName) {
                     numColorClass = "text-rose-500 font-bold";
@@ -436,7 +433,6 @@
                     paperBadgeHtml = `<span class="text-[9px] sm:text-[10px] ${paperInfo.badgeClass} font-bold px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-0.5"></i>第${paperInfo.term}期</span>`;
                 }
 
-                // 今日である印のバッジまたはスタイル
                 let todayBadge = isToday ? `<span class="text-[9px] bg-indigo-600 text-white px-1 py-0.2 rounded font-bold">今日</span>` : '';
 
                 cellHeader.innerHTML = `
@@ -452,7 +448,7 @@
                 cell.appendChild(cellHeader);
 
                 const eventContainer = document.createElement('div');
-                eventContainer.className = "flex-1 space-y-1 overflow-y-auto custom-scrollbar max-h-[65px] sm:max-h-[80px] pt-0.5";
+                eventContainer.className = "flex-1 space-y-1 overflow-hidden pt-0.5";
 
                 // ウィッシュイベント
                 if (wishInfo.active) {
@@ -461,17 +457,25 @@
                     if (wishInfo.isStart) wishText += ' 開始';
                     if (wishInfo.isEnd) wishText += ' 終了';
 
-                    wishBadge.className = "text-[10px] sm:text-[11px] px-2 py-0.5 rounded border bg-rose-50 text-rose-700 border-rose-300 flex items-center font-bold shadow-2xs truncate";
-                    wishBadge.innerHTML = `<i class="fa-solid fa-bell text-rose-500 mr-1 text-[10px]"></i>${wishText}`;
+                    wishBadge.className = "text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded border bg-rose-50 text-rose-700 border-rose-300 flex items-center font-bold shadow-2xs truncate";
+                    wishBadge.innerHTML = `<i class="fa-solid fa-bell text-rose-500 mr-1 text-[9px]"></i><span class="truncate">${wishText}</span>`;
                     eventContainer.appendChild(wishBadge);
                 }
 
                 // カスタム不定期イベント
-                const matchingCustomEvents = getCustomEventsForDate(dateStr);
                 matchingCustomEvents.forEach(evt => {
                     const evtBadge = createCustomEventBadge(evt);
                     eventContainer.appendChild(evtBadge);
                 });
+
+                // イベントが多い場合に「＋件」などを表示するヒント
+                const totalEventsCount = (wishInfo.active ? 1 : 0) + matchingCustomEvents.length;
+                if (totalEventsCount > 2) {
+                    const moreBadge = document.createElement('div');
+                    moreBadge.className = "text-[9px] text-slate-500 font-semibold px-1 text-right";
+                    moreBadge.textContent = "詳細を見る...";
+                    eventContainer.appendChild(moreBadge);
+                }
 
                 cell.appendChild(eventContainer);
                 grid.appendChild(cell);
@@ -481,7 +485,7 @@
             const remainingCells = (7 - (totalCells % 7)) % 7;
             for (let i = 0; i < remainingCells; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "bg-slate-50/50 min-h-[95px] sm:min-h-[115px] p-1.5";
+                emptyCell.className = "bg-slate-50/50 min-h-[105px] sm:min-h-[120px] p-1.5";
                 grid.appendChild(emptyCell);
             }
 
@@ -503,13 +507,92 @@
                 : 'bg-emerald-100/90 text-emerald-900 border-emerald-300';
             const icon = isMaint ? 'fa-wrench text-amber-700' : 'fa-champagne-glasses text-emerald-700';
 
-            badge.className = `text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded border ${bgClass} flex items-center justify-between truncate shadow-2xs`;
+            badge.className = `text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded border ${bgClass} flex items-center justify-between truncate shadow-2xs`;
             badge.innerHTML = `
-                <span class="truncate font-semibold" title="${escapeHtml(evt.title)} ${evt.note ? '(' + escapeHtml(evt.note) + ')' : ''}">
-                    <i class="fa-solid ${icon} mr-1 text-[10px]"></i>${escapeHtml(evt.title)}
+                <span class="truncate font-semibold">
+                    <i class="fa-solid ${icon} mr-1 text-[9px]"></i>${escapeHtml(evt.title)}
                 </span>
             `;
             return badge;
+        }
+
+        /* -------------------------------------------------------------
+           ポップアップモーダル関連の処理
+        ------------------------------------------------------------- */
+        function openDayModal(dateStr, holidayName, paperInfo, wishInfo, customEvts) {
+            const modal = document.getElementById('eventModal');
+            const titleEl = document.getElementById('modalDateTitle');
+            const bodyEl = document.getElementById('modalContentBody');
+
+            // 日付表示の整形 (例: 2026年9月27日 (日))
+            const d = new Date(dateStr + 'T00:00:00');
+            const daysArr = ['日', '月', '火', '水', '木', '金', '土'];
+            titleEl.textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 (${daysArr[d.getDay()]})`;
+
+            let html = '';
+
+            // 祝日情報
+            if (holidayName) {
+                html += `<div class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-star text-rose-500"></i> 祝日: ${escapeHtml(holidayName)}
+                </div>`;
+            }
+
+            // 紙飛行機・期情報
+            if (!paperInfo.isBeforeOpen) {
+                html += `<div class="p-2.5 bg-sky-50 border border-sky-200 rounded-xl text-sky-800 flex items-center justify-between">
+                    <span class="font-bold flex items-center gap-2"><i class="fa-solid fa-paper-plane text-sky-600"></i> 紙飛行機サイクル</span>
+                    <span class="text-xs px-2 py-0.5 rounded font-bold ${paperInfo.badgeClass}">第${paperInfo.term}期</span>
+                </div>`;
+            }
+
+            // ウィッシュ情報
+            if (wishInfo.active) {
+                let statusText = 'ウィッシュ期間中';
+                if (wishInfo.isStart) statusText = 'ウィッシュ開始日';
+                if (wishInfo.isEnd) statusText = 'ウィッシュ終了日';
+
+                html += `<div class="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 flex items-center gap-2 font-bold">
+                    <i class="fa-solid fa-bell text-rose-500"></i> ${statusText} (火〜翌火)
+                </div>`;
+            }
+
+            // カスタムイベント
+            if (customEvts && customEvts.length > 0) {
+                customEvts.forEach(evt => {
+                    const isMaint = (evt.type === 'maint');
+                    const bgClass = isMaint ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-emerald-50 border-emerald-200 text-emerald-900';
+                    const icon = isMaint ? 'fa-wrench text-amber-700' : 'fa-champagne-glasses text-emerald-700';
+
+                    html += `<div class="p-2.5 border rounded-xl ${bgClass} space-y-1">
+                        <div class="font-bold flex items-center gap-2">
+                            <i class="fa-solid ${icon}"></i> ${escapeHtml(evt.title)}
+                        </div>
+                        ${evt.note ? `<div class="text-xs text-slate-600 pl-5">${escapeHtml(evt.note)}</div>` : ''}
+                    </div>`;
+                });
+            }
+
+            // 予定が何もない場合
+            if (!holidayName && paperInfo.isBeforeOpen && !wishInfo.active && (!customEvts || customEvts.length === 0)) {
+                html += `<div class="text-slate-400 text-center py-4">登録されている特定のイベントはありません</div>`;
+            }
+
+            bodyEl.innerHTML = html;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('eventModal');
+            modal.classList.add('hidden');
+        }
+
+        // モーダルの外側をクリックしたら閉じる
+        window.onclick = function(event) {
+            const modal = document.getElementById('eventModal');
+            if (event.target === modal) {
+                closeModal();
+            }
         }
 
         function escapeHtml(str) {
