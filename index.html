@@ -158,28 +158,38 @@
                 endDate: '2026-07-29',
                 note: 'サーバー開設記念'
             },
-           /* {
-                type: 'maint',
-                title: '定例システムメンテナンス',
-                startDate: '2026-09-16',
-                endDate: '2026-09-16',
-                note: '14:00 - 16:00'
-            },
+            // 第13期：3次職
             {
                 type: 'event',
-                title: '34鯖開設記念特別フェス',
-                startDate: '2026-10-10',
+                title: '3次職',
+                startDate: '2026-10-14',
                 endDate: '2026-10-14',
-                note: '豪華ボーナス開放'
+                note: '第13期開始日'
             },
+            // 第22期：4次職
             {
-                type: 'maint',
-                title: '大型アップデート伴う点検',
-                startDate: '2026-11-20',
-                endDate: '2026-11-20',
-                note: '10:00 - 17:00'
+                type: 'event',
+                title: '4次職',
+                startDate: '2026-12-16',
+                endDate: '2026-12-16',
+                note: '第22期開始日'
+            },
+            // 第31期：5次職
+            {
+                type: 'event',
+                title: '5次職',
+                startDate: '2027-02-17',
+                endDate: '2027-02-17',
+                note: '第31期開始日'
+            },
+            // 第42期：6次職
+            {
+                type: 'event',
+                title: '6次職',
+                startDate: '2027-05-05',
+                endDate: '2027-05-05',
+                note: '第42期開始日'
             }
-            */
         ];
 
         // 日本の祝日データ（2026年7月〜2027年12月）
@@ -214,10 +224,13 @@
             '2027-11-23': '勤労感謝の日'
         };
 
+        // 今日の日付文字列を取得 (YYYY-MM-DD形式)
+        const todayObj = new Date();
+        const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, '0')}-${String(todayObj.getDate()).padStart(2, '0')}`;
+
         // 今日の日付からベース年月を取得
-        const now = new Date();
-        let baseYear = now.getFullYear();
-        let baseMonth = now.getMonth();
+        let baseYear = todayObj.getFullYear();
+        let baseMonth = todayObj.getMonth();
 
         if (baseYear < MIN_YEAR || (baseYear === MIN_YEAR && baseMonth < MIN_MONTH)) {
             baseYear = MIN_YEAR;
@@ -246,7 +259,6 @@
         ------------------------------------------------------------- */
         function getPaperPlaneInfo(dateStr) {
             const target = new Date(dateStr + 'T00:00:00');
-            // 第0期の開始水曜日: 2026-07-15 (9/23〜9/29が第10期、9/30〜が第11期になります)
             const basePaperPlaneDate = new Date('2026-07-15T00:00:00');
 
             if (target < basePaperPlaneDate) {
@@ -397,12 +409,16 @@
                 const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dateObj = new Date(year, monthIndex, day);
                 const dayOfWeek = dateObj.getDay();
+                const isToday = (dateStr === todayStr);
 
                 const paperInfo = getPaperPlaneInfo(dateStr);
                 const wishInfo = paperInfo.isBeforeOpen ? { active: false } : getWishInfo(dateStr);
 
+                // 今日の場合は特別なボーダーやリングを追加
+                const todayClass = isToday ? "ring-2 ring-indigo-500 ring-inset z-10 font-bold" : "";
+
                 const cell = document.createElement('div');
-                cell.className = `min-h-[95px] sm:min-h-[115px] p-1.5 sm:p-2 flex flex-col group transition-colors relative ${paperInfo.colorClass}`;
+                cell.className = `min-h-[95px] sm:min-h-[115px] p-1.5 sm:p-2 flex flex-col group transition-colors relative ${paperInfo.colorClass} ${todayClass}`;
 
                 const holidayName = HOLIDAYS[dateStr];
                 let numColorClass = paperInfo.isBeforeOpen ? "text-slate-400 font-semibold" : "text-slate-700 font-semibold";
@@ -420,9 +436,15 @@
                     paperBadgeHtml = `<span class="text-[9px] sm:text-[10px] ${paperInfo.badgeClass} font-bold px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-0.5"></i>第${paperInfo.term}期</span>`;
                 }
 
+                // 今日である印のバッジまたはスタイル
+                let todayBadge = isToday ? `<span class="text-[9px] bg-indigo-600 text-white px-1 py-0.2 rounded font-bold">今日</span>` : '';
+
                 cellHeader.innerHTML = `
                     <div class="flex flex-col">
-                        <span class="text-xs sm:text-sm ${numColorClass} leading-none">${day}</span>
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs sm:text-sm ${numColorClass} leading-none">${day}</span>
+                            ${todayBadge}
+                        </div>
                         ${holidayName ? `<span class="text-[9px] text-rose-500 font-semibold truncate max-w-[55px] sm:max-w-[75px] mt-0.5">${holidayName}</span>` : ''}
                     </div>
                     ${paperBadgeHtml}
