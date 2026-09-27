@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>34鯖イベントカレンダー</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans JP', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* 交互背景色: 薄い黄色と薄い水色 */
+        .paper-plane-yellow {
+            background-color: rgba(254, 243, 199, 0.45); /* Amber / Yellow 100 */
+        }
+        .paper-plane-blue {
+            background-color: rgba(224, 242, 254, 0.45); /* Sky / Blue 100 */
+        }
+        .paper-plane-yellow:hover, .paper-plane-blue:hover {
+            filter: brightness(0.97);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-full flex flex-col">
+
+    <!-- ヘッダーエリア -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center justify-center w-10 h-10 bg-sky-100 text-sky-600 rounded-xl shadow-inner">
+                    <i class="fa-solid fa-paper-plane text-lg"></i>
+                </span>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">34鯖イベントカレンダー</h1>
+                    <p class="text-xs text-slate-500 mt-0.5" id="headerSubTitle"></p>
+                </div>
+            </div>
+
+            <!-- コントロールボタン群 -->
+            <div class="flex items-center gap-2.5 self-end md:self-auto">
+                <!-- 期間移動ボタン -->
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                    <button onclick="shiftMonthRange(-1)" class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-all" title="前月へ">
+                        <i class="fa-solid fa-chevron-left"></i> 前月
+                    </button>
+                    <button onclick="shiftMonthRange(1)" class="px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-all" title="次月へ">
+                        次月 <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 lg:px-8 py-4">
+        <!-- 凡例 (Legend) -->
+        <div class="mb-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-5">
+                <span class="font-bold text-slate-500 uppercase tracking-wider text-[11px]"><i class="fa-solid fa-layer-group mr-1"></i>カテゴリ凡例:</span>
+                
+                <!-- ウィッシュ -->
+                <div class="flex items-center gap-1.5 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
+                    <span class="text-rose-600 font-bold">🔔 ウィッシュ (火〜翌火)</span>
+                </div>
+
+                <!-- 紙飛行機 -->
+                <div class="flex items-center gap-1.5 bg-sky-50 px-2.5 py-1 rounded-lg border border-sky-200">
+                    <span class="text-sky-600 font-bold">✈️ 紙飛行機 (水〜翌火)</span>
+                    <span class="text-[10px] text-amber-50 bg-amber-800 px-1.5 py-0.2 rounded border border-amber-900 font-bold">偶数期 (茶)</span>
+                    <span class="text-[10px] text-white bg-sky-600 px-1.5 py-0.2 rounded border border-sky-700 font-bold">奇数期 (青)</span>
+                </div>
+
+                <!-- メンテ -->
+                <div class="flex items-center gap-1.5 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200">
+                    <span class="text-amber-700 font-bold">🔧 メンテ</span>
+                </div>
+
+                <!-- イベント -->
+                <div class="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                    <span class="text-emerald-700 font-bold">🎉 イベント</span>
+                </div>
+            </div>
+
+            <div class="text-slate-400 text-[11px] italic">
+                *2026/7/29（開設日）以降のサイクルを自動表示
+            </div>
+        </div>
+
+        <!-- カレンダー表示コンテナ -->
+        <div id="calendarContainer" class="space-y-8">
+            <!-- カレンダーカードが動的表示されます -->
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
+            &copy; おはるん(445358)＠34鯖 ver1.0 20260927
+        </div>
+    </footer>
+
+    <script>
+        /* -------------------------------------------------------------
+           データ構造 & 定数定義
+        ------------------------------------------------------------- */
+        // 最低参照限界: 2026年7月 (開設月)
+        const MIN_YEAR = 2026;
+        const MIN_MONTH = 6; // 0-indexed (6 = 7月)
+
+        /**
+         * 不定期イベント・メンテナンスの直書き用データ
+         * 予定を追加・更新する場合は、この配列に要素を追加してください。
+         */
+        const customEvents = [
+            {
+                type: 'event',
+                title: '34鯖開設！',
+                startDate: '2026-07-29',
+                endDate: '2026-07-29',
+                note: 'サーバー開設記念'
+            },
+           /* {
+                type: 'maint',
+                title: '定例システムメンテナンス',
+                startDate: '2026-09-16',
+                endDate: '2026-09-16',
+                note: '14:00 - 16:00'
+            },
+            {
+                type: 'event',
+                title: '34鯖開設記念特別フェス',
+                startDate: '2026-10-10',
+                endDate: '2026-10-14',
+                note: '豪華ボーナス開放'
+            },
+            {
+                type: 'maint',
+                title: '大型アップデート伴う点検',
+                startDate: '2026-11-20',
+                endDate: '2026-11-20',
+                note: '10:00 - 17:00'
+            }
+            */
+        ];
+
+        // 日本の祝日データ（2026年7月〜2027年12月）
+        const HOLIDAYS = {
+            // --- 2026年 ---
+            '2026-07-20': '海の日',
+            '2026-08-11': '山の日',
+            '2026-09-21': '敬老の日',
+            '2026-09-22': '国民の休日',
+            '2026-09-23': '秋分の日',
+            '2026-10-12': 'スポーツの日',
+            '2026-11-03': '文化の日',
+            '2026-11-23': '勤労感謝の日',
+
+            // --- 2027年 ---
+            '2027-01-01': '元日',
+            '2027-01-11': '成人の日',
+            '2027-02-11': '建国記念の日',
+            '2027-02-23': '天皇誕生日',
+            '2027-03-21': '春分の日',
+            '2027-03-22': '振替休日',
+            '2027-04-29': '昭和の日',
+            '2027-05-03': '憲法記念日',
+            '2027-05-04': 'みどりの日',
+            '2027-05-05': 'こどもの日',
+            '2027-07-19': '海の日',
+            '2027-08-11': '山の日',
+            '2027-09-20': '敬老の日',
+            '2027-09-23': '秋分の日',
+            '2027-10-11': 'スポーツの日',
+            '2027-11-03': '文化の日',
+            '2027-11-23': '勤労感謝の日'
+        };
+
+        // 今日の日付からベース年月を取得
+        const now = new Date();
+        let baseYear = now.getFullYear();
+        let baseMonth = now.getMonth();
+
+        if (baseYear < MIN_YEAR || (baseYear === MIN_YEAR && baseMonth < MIN_MONTH)) {
+            baseYear = MIN_YEAR;
+            baseMonth = MIN_MONTH;
+        }
+
+        let monthsData = [];
+
+        /* -------------------------------------------------------------
+           表示月データの自動計算 (指定月を含めた6ヶ月分)
+        ------------------------------------------------------------- */
+        function initMonthsData() {
+            monthsData = [];
+            for (let i = 0; i < 6; i++) {
+                const d = new Date(baseYear, baseMonth + i, 1);
+                monthsData.push({
+                    year: d.getFullYear(),
+                    month: d.getMonth(),
+                    name: `${d.getMonth() + 1}月`
+                });
+            }
+        }
+
+        /* -------------------------------------------------------------
+           紙飛行機 & ウィッシュ 自動計算ロジック
+        ------------------------------------------------------------- */
+        function getPaperPlaneInfo(dateStr) {
+            const target = new Date(dateStr + 'T00:00:00');
+            // 第0期の開始水曜日: 2026-07-15 (9/23〜9/29が第10期、9/30〜が第11期になります)
+            const basePaperPlaneDate = new Date('2026-07-15T00:00:00');
+
+            if (target < basePaperPlaneDate) {
+                return {
+                    isBeforeOpen: true,
+                    term: 0,
+                    isStart: false,
+                    colorClass: 'bg-white',
+                    badgeClass: ''
+                };
+            }
+
+            const diffTime = target.getTime() - basePaperPlaneDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+            const currentTerm = Math.floor(diffDays / 7);
+
+            let dayOfCycle = diffDays % 7;
+            if (dayOfCycle < 0) dayOfCycle += 7;
+
+            const isEven = (currentTerm % 2 === 0);
+
+            return {
+                isBeforeOpen: false,
+                term: currentTerm,
+                isStart: (dayOfCycle === 0),
+                colorClass: isEven ? 'paper-plane-yellow' : 'paper-plane-blue',
+                badgeClass: isEven 
+                    ? 'bg-amber-800 text-amber-50 border border-amber-900'
+                    : 'bg-sky-600 text-white border border-sky-700'
+            };
+        }
+
+        function getWishInfo(dateStr) {
+            const target = new Date(dateStr + 'T00:00:00');
+            const baseWishStart = new Date('2026-09-29T00:00:00');
+
+            const diffDays = Math.floor((target.getTime() - baseWishStart.getTime()) / (1000 * 3600 * 24));
+            let cycleDay = diffDays % 42;
+            if (cycleDay < 0) cycleDay += 42;
+
+            if (cycleDay >= 0 && cycleDay <= 7) {
+                return { 
+                    active: true,
+                    isStart: (cycleDay === 0),
+                    isEnd: (cycleDay === 7)
+                };
+            }
+
+            return { active: false, isStart: false, isEnd: false };
+        }
+
+        /* -------------------------------------------------------------
+           画面初期化 & レンダリング
+        ------------------------------------------------------------- */
+        window.addEventListener('DOMContentLoaded', () => {
+            initMonthsData();
+            renderHeaderSubtitle();
+            renderCalendar();
+        });
+
+        function renderHeaderSubtitle() {
+            const startM = monthsData[0];
+            const endM = monthsData[monthsData.length - 1];
+            document.getElementById('headerSubTitle').textContent = 
+                `${startM.year}年${startM.month + 1}月 〜 ${endM.year}年${endM.month + 1}月`;
+        }
+
+        function shiftMonthRange(deltaMonths) {
+            const newBaseMonth = baseMonth + deltaMonths;
+            const newDate = new Date(baseYear, newBaseMonth, 1);
+
+            if (newDate.getFullYear() < MIN_YEAR || (newDate.getFullYear() === MIN_YEAR && newDate.getMonth() < MIN_MONTH)) {
+                alert("2026年7月（34鯖開設月）より前のカレンダーはありません");
+                return;
+            }
+
+            baseYear = newDate.getFullYear();
+            baseMonth = newDate.getMonth();
+            initMonthsData();
+
+            renderHeaderSubtitle();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendarContainer');
+            container.innerHTML = '';
+
+            monthsData.forEach(mInfo => {
+                const monthCard = createMonthCalendarNode(mInfo.year, mInfo.month, mInfo.name);
+                container.appendChild(monthCard);
+            });
+        }
+
+        /* -------------------------------------------------------------
+           カレンダーDOM作成
+        ------------------------------------------------------------- */
+        function createMonthCalendarNode(year, monthIndex, monthName) {
+            const card = document.createElement('div');
+            card.className = "bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden transition-all hover:shadow-md";
+
+            const header = document.createElement('div');
+            header.className = "bg-slate-800 text-white px-6 py-3.5 flex justify-between items-center";
+            header.innerHTML = `
+                <div class="flex items-baseline gap-3">
+                    <span class="text-2xl sm:text-3xl font-bold tracking-tight">${year}年${monthName}</span>
+                </div>
+                <div class="text-xs px-2.5 py-1 bg-slate-700/80 text-slate-300 rounded-full font-mono">
+                    ${year}.${String(monthIndex + 1).padStart(2, '0')}
+                </div>
+            `;
+            card.appendChild(header);
+
+            const weekHeader = document.createElement('div');
+            weekHeader.className = "grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-semibold py-2.5";
+            
+            const daysOfWeek = [
+                { name: '日', color: 'text-rose-500' },
+                { name: '月', color: 'text-slate-600' },
+                { name: '火', color: 'text-amber-600 font-bold' },
+                { name: '水', color: 'text-sky-600 font-bold' },
+                { name: '木', color: 'text-slate-600' },
+                { name: '金', color: 'text-slate-600' },
+                { name: '土', color: 'text-blue-500' }
+            ];
+
+            daysOfWeek.forEach(day => {
+                const cell = document.createElement('div');
+                cell.className = `${day.color} uppercase tracking-wider text-[11px] sm:text-xs`;
+                cell.textContent = day.name;
+                weekHeader.appendChild(cell);
+            });
+            card.appendChild(weekHeader);
+
+            const grid = document.createElement('div');
+            grid.className = "grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200/60 border-b border-slate-200/60";
+
+            const firstDayIndex = new Date(year, monthIndex, 1).getDay();
+            const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "bg-slate-50/50 min-h-[95px] sm:min-h-[115px] p-1.5";
+                grid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dateObj = new Date(year, monthIndex, day);
+                const dayOfWeek = dateObj.getDay();
+
+                const paperInfo = getPaperPlaneInfo(dateStr);
+                const wishInfo = paperInfo.isBeforeOpen ? { active: false } : getWishInfo(dateStr);
+
+                const cell = document.createElement('div');
+                cell.className = `min-h-[95px] sm:min-h-[115px] p-1.5 sm:p-2 flex flex-col group transition-colors relative ${paperInfo.colorClass}`;
+
+                const holidayName = HOLIDAYS[dateStr];
+                let numColorClass = paperInfo.isBeforeOpen ? "text-slate-400 font-semibold" : "text-slate-700 font-semibold";
+                if (dayOfWeek === 0 || holidayName) {
+                    numColorClass = "text-rose-500 font-bold";
+                } else if (dayOfWeek === 6) {
+                    numColorClass = "text-blue-500 font-bold";
+                }
+
+                const cellHeader = document.createElement('div');
+                cellHeader.className = "flex justify-between items-start mb-1 gap-1";
+                
+                let paperBadgeHtml = '';
+                if (paperInfo.isStart && paperInfo.term >= 0) {
+                    paperBadgeHtml = `<span class="text-[9px] sm:text-[10px] ${paperInfo.badgeClass} font-bold px-1.5 py-0.5 rounded shadow-2xs whitespace-nowrap"><i class="fa-solid fa-paper-plane mr-0.5"></i>第${paperInfo.term}期</span>`;
+                }
+
+                cellHeader.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-xs sm:text-sm ${numColorClass} leading-none">${day}</span>
+                        ${holidayName ? `<span class="text-[9px] text-rose-500 font-semibold truncate max-w-[55px] sm:max-w-[75px] mt-0.5">${holidayName}</span>` : ''}
+                    </div>
+                    ${paperBadgeHtml}
+                `;
+                cell.appendChild(cellHeader);
+
+                const eventContainer = document.createElement('div');
+                eventContainer.className = "flex-1 space-y-1 overflow-y-auto custom-scrollbar max-h-[65px] sm:max-h-[80px] pt-0.5";
+
+                // ウィッシュイベント
+                if (wishInfo.active) {
+                    const wishBadge = document.createElement('div');
+                    let wishText = 'ウィッシュ';
+                    if (wishInfo.isStart) wishText += ' 開始';
+                    if (wishInfo.isEnd) wishText += ' 終了';
+
+                    wishBadge.className = "text-[10px] sm:text-[11px] px-2 py-0.5 rounded border bg-rose-50 text-rose-700 border-rose-300 flex items-center font-bold shadow-2xs truncate";
+                    wishBadge.innerHTML = `<i class="fa-solid fa-bell text-rose-500 mr-1 text-[10px]"></i>${wishText}`;
+                    eventContainer.appendChild(wishBadge);
+                }
+
+                // カスタム不定期イベント
+                const matchingCustomEvents = getCustomEventsForDate(dateStr);
+                matchingCustomEvents.forEach(evt => {
+                    const evtBadge = createCustomEventBadge(evt);
+                    eventContainer.appendChild(evtBadge);
+                });
+
+                cell.appendChild(eventContainer);
+                grid.appendChild(cell);
+            }
+
+            const totalCells = firstDayIndex + totalDays;
+            const remainingCells = (7 - (totalCells % 7)) % 7;
+            for (let i = 0; i < remainingCells; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "bg-slate-50/50 min-h-[95px] sm:min-h-[115px] p-1.5";
+                grid.appendChild(emptyCell);
+            }
+
+            card.appendChild(grid);
+            return card;
+        }
+
+        function getCustomEventsForDate(dateStr) {
+            return customEvents.filter(evt => {
+                return dateStr >= evt.startDate && dateStr <= evt.endDate;
+            });
+        }
+
+        function createCustomEventBadge(evt) {
+            const badge = document.createElement('div');
+            const isMaint = (evt.type === 'maint');
+            const bgClass = isMaint 
+                ? 'bg-amber-100/90 text-amber-900 border-amber-300' 
+                : 'bg-emerald-100/90 text-emerald-900 border-emerald-300';
+            const icon = isMaint ? 'fa-wrench text-amber-700' : 'fa-champagne-glasses text-emerald-700';
+
+            badge.className = `text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded border ${bgClass} flex items-center justify-between truncate shadow-2xs`;
+            badge.innerHTML = `
+                <span class="truncate font-semibold" title="${escapeHtml(evt.title)} ${evt.note ? '(' + escapeHtml(evt.note) + ')' : ''}">
+                    <i class="fa-solid ${icon} mr-1 text-[10px]"></i>${escapeHtml(evt.title)}
+                </span>
+            `;
+            return badge;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+    </script>
+</body>
+</html>
